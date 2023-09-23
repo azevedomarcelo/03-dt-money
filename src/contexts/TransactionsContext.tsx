@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { createContext } from "use-context-selector";
-import { api } from "../lib/axios";
+import { generateTransactionId } from "../utils/randomId";
+// import { api } from "../lib/axios";
 
 interface TransactionContextType {
   transactions: TransactionProps[];
@@ -23,7 +24,7 @@ interface TransactionProviderProps {
 
 interface CreateTransactionInput {
   description: string,
-  type: 'income' | 'outcome',
+  type: "income" | "outcome";
   category: string,
   price: number,
 }
@@ -34,34 +35,31 @@ export function TransactionProvider({ children }: TransactionProviderProps) {
   const [transactions, setTransactions] = useState<TransactionProps[]>([]);
 
   const fetchTransactions = useCallback(async (query?: string) => {
-    const response = await api.get('/transactions', {
-      params: {
-        q: query,
-        _sort: 'createdAt',
-        _order: 'desc'
-      }
-    });
+    const transactionLocalStorage = localStorage.getItem('@dt-money:transactions');
 
-    setTransactions(response.data)
-  }, []);
+    if (!transactionLocalStorage) return;
+
+    if (query) {
+      transactions.filter(transaction => transaction.description === query);
+      // return setTransactions(filteredListTransaction);
+    }
+
+    return setTransactions(prevState => [...prevState, JSON.parse(transactionLocalStorage)])
+  }, [transactions]);
 
   const createTransactions = useCallback(async (data: CreateTransactionInput) => {
-    const { description, type, category, price } = data;
+    const transactionsInfo = {
+      id: generateTransactionId(),
+      createdAt: new Date().toISOString(),
+      ...data,
+    }
 
-    const response = await api.post('/transactions', {
-      description,
-      type,
-      category,
-      price,
-      createdAt: new Date(),
-    });
-
-    setTransactions(state => [response.data, ...state]);
+    setTransactions((prevState) => [...prevState, transactionsInfo]);
   }, []);
 
   useEffect(() => {
-    fetchTransactions();
-  }, [fetchTransactions]);
+    localStorage.setItem('@dt-money:transactions', JSON.stringify(transactions));
+  }, [transactions]);
 
   return (
     <TransactionsContext.Provider value={{

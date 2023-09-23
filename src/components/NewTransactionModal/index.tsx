@@ -1,4 +1,5 @@
 import { Controller, useForm } from 'react-hook-form';
+import { useContextSelector } from 'use-context-selector';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowCircleDown, ArrowCircleUp, X } from 'phosphor-react';
 
@@ -7,7 +8,6 @@ import * as z from 'zod';
 
 import { CloseButton, Content, Overlay, TransactionType, TransactionTypeButton } from './styles';
 import { TransactionsContext } from '../../contexts/TransactionsContext';
-import { useContextSelector } from 'use-context-selector';
 
 const newTransactionFormSchema = z.object({
   description: z.string(),
